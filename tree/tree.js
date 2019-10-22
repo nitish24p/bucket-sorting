@@ -60,6 +60,8 @@ BucketTree.prototype.findNode = function(steps) {
       }
     }
   }
+
+  return null;
 };
 
 module.exports = BucketTree;

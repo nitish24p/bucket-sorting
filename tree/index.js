@@ -11,11 +11,15 @@
 const Tree = require('./tree');
 const UserMap = require('./use-map');
 
-function BucketHashTree() {
+const BUCKET_SIZE = 40;
+
+function BucketHashTree(bucketSize) {
+  this.bucketSize = bucketSize;
   this.bucketTree = {};
   this.userStepMap = new UserMap();
 
-  for (let index = 0; index <= 1000000; index = index + 100) {
+  for (let index = 0; index <= 1000000; index = index + this.bucketSize) {
+    //console.log(index);
     this.bucketTree[index] = new Tree();
   }
 }
@@ -23,19 +27,19 @@ function BucketHashTree() {
 BucketHashTree.prototype.addUser = function(user, steps) {
   //console.log(this.bucketTree);
   let currentUserSteps = this.userStepMap.findUserSteps(user) || steps;
-  let minBucketIndex = Math.floor(currentUserSteps / 100);
+  let minBucketIndex = Math.floor(currentUserSteps / this.bucketSize);
   //console.log(minBucketIndex, currentUserSteps, steps, user.id);
-  let foundTree = this.bucketTree[minBucketIndex * 100];
+  let foundTree = this.bucketTree[minBucketIndex * this.bucketSize];
   const userNode = foundTree.findNode(currentUserSteps);
   //console.log('==FOUND NODE  ', userNode);
-  if (!userNode) {
+  if (userNode === null) {
     foundTree.addUserNode(user, steps);
     this.userStepMap.addUser(user, steps);
   } else {
     userNode.removeUser(user);
     const newSteps = currentUserSteps + steps;
-    minBucketIndex = Math.floor(newSteps / 100);
-    foundTree = this.bucketTree[minBucketIndex * 100];
+    minBucketIndex = Math.floor(newSteps / this.bucketSize);
+    foundTree = this.bucketTree[minBucketIndex * this.bucketSize];
     foundTree.addUserNode(user, newSteps);
     this.userStepMap.addUser(user, newSteps);
     // Remove user from existing node
@@ -74,7 +78,7 @@ const user4 = {
 };
 
 const start = new Date().getTime();
-const hashBucketTree = new BucketHashTree();
+const hashBucketTree = new BucketHashTree(BUCKET_SIZE);
 for (let index = 0; index < 100000; index++) {
   hashBucketTree.addUser(user1, Math.floor(Math.random() * 10) + 1);
   hashBucketTree.addUser(user2, Math.floor(Math.random() * 10) + 1);
